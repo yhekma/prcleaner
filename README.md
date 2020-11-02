@@ -21,10 +21,6 @@ Webhook that acts when PR is opened, PR is closed or when branch is deleted.
 
 All pods with correspoding SHA, PR label and repo label will have their corresponding helm release deleted
 
-### PR Created
+### PR Created/branch deleted
 
 All pods with correspoding SHA, branch label and repo label will have their corresponding helm release deleted
-
-### Branch deleted
-
-All pods with corresponding repo and branch label will have their helm release deleted

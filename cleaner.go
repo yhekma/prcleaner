@@ -14,6 +14,7 @@ import (
 type Hook struct {
 	// branch action
 	Ref        string `json:"ref"`
+	Before     string `json:"before"` // This is sha
 	Deleted    bool   `json:"deleted"`
 	Repository struct {
 		Name string `json:"name"`
@@ -31,28 +32,28 @@ type Hook struct {
 }
 
 func CleanerServer(w http.ResponseWriter, r *http.Request) {
-	var pr Hook
-	err := json.NewDecoder(r.Body).Decode(&pr)
+	var hook Hook
+	err := json.NewDecoder(r.Body).Decode(&hook)
 	CheckErr(err)
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selector string
 
-	if pr.Action == "closed" {
+	if hook.Action == "closed" {
 		selector = fmt.Sprintf(
-			"%s=PR-%d,%s=%s,%s=%s", *BranchLabel, pr.Number, *RepoLabel, pr.Repository.Name, *CommitShaLabel, pr.PullRequest.Head.Sha,
+			"%s=PR-%d,%s=%s,%s=%s", *BranchLabel, hook.Number, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.PullRequest.Head.Sha,
 		)
 	}
 
-	if pr.Action == "opened" {
+	if hook.Action == "opened" {
 		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s=%s", *BranchLabel, pr.PullRequest.Head.Ref, *RepoLabel, pr.Repository.Name, *CommitShaLabel, pr.PullRequest.Head.Sha,
+			"%s=%s,%s=%s,%s=%s", *BranchLabel, hook.PullRequest.Head.Ref, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.PullRequest.Head.Sha,
 		)
 	}
 
-	if pr.Deleted {
-		branchName := strings.Split(pr.Ref, "/")[2]
+	if hook.Deleted { // Branch deletion
+		branchName := strings.Split(hook.Ref, "/")[2]
 		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s", *BranchLabel, branchName, *RepoLabel, pr.Repository.Name, *CommitShaLabel)
+			"%s=%s,%s=%s,%s=%s", *BranchLabel, branchName, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.Before)
 	}
 
 	log.Debug("using selector ", selector)
@@ -73,7 +74,7 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(log.Fields{
 			"pod":       pod.Name,
 			"namespace": pod.Namespace,
-			"pr":        pr.Number,
+			"hook":      hook.Number,
 		}).Debug("found pod to delete")
 
 		var out []byte
