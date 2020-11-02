@@ -1,8 +1,8 @@
 package main
 
 import (
-	flag "github.com/spf13/pflag"
 	log "github.com/sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -12,9 +12,8 @@ import (
 )
 
 var Clientset *kubernetes.Clientset
-var Org *string
-var App *string
 var Dryrun *bool
+var CommitShaLabel *string
 var ReleaseLabel *string
 var BranchLabel *string
 var RepoLabel *string
@@ -41,13 +40,12 @@ func logInit() {
 
 func main() {
 	logInit()
-	Org = flag.StringP("org", "o", "", "org to process for")
-	App = flag.StringP("app", "a", "", "app to process for")
 	debug := flag.BoolP("verbose", "v", false, "turn on verbose")
 	Dryrun = flag.BoolP("dry-run", "d", true, "don't actually do anything")
 	ReleaseLabel = flag.String("releaseLabel", "helm.sh/release", "label name for releases")
 	BranchLabel = flag.String("branchLabel", "app.fedex.io/git-branch", "label name for branches")
 	RepoLabel = flag.String("repoLabel", "app.fedex.io/git-repository", "label name for repo")
+	CommitShaLabel = flag.String("commitSha", "app.fedex.io/git-commit", "label name for commit sha")
 	flag.Parse()
 
 	if *debug {
