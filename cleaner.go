@@ -65,7 +65,6 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
 	CheckErr(err)
 	for _, pod := range pods.Items {
-		// We only want pods in the namespace "app" or "app-(.*)"
 		release := pod.Labels[*ReleaseLabel]
 		if release == "" {
 			continue
