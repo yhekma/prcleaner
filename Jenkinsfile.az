@@ -1,0 +1,31 @@
+@Library('jenkins-pipeline-library@cicd-v1') _
+
+pipeline {
+  agent none
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+    disableConcurrentBuilds()
+  }
+
+// Start Stages
+  stages {
+    stage('Prepare Environment') {
+      agent any
+      steps {
+        prepareEnvironment()
+      }
+    }
+
+    stage("Build Docker Image") {
+      options { skipDefaultCheckout() }
+      agent any
+      steps {
+        githubStatus('pending')
+        readVersion()
+        buildDocker()
+        tagDocker()
+        publishDocker()
+      }
+    }
+  } // ENd Of Stages
+}
