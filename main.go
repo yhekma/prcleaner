@@ -9,12 +9,14 @@ import (
 	"os"
 )
 
-var Clientset *kubernetes.Clientset
-var Dryrun *bool
-var CommitShaLabel *string
-var ReleaseLabel *string
-var BranchLabel *string
-var RepoLabel *string
+var (
+	ReleaseLabel   *string
+	BranchLabel    *string
+	CommitShaLabel *string
+	RepoLabel      *string
+	Dryrun         *bool
+	Clientset      *kubernetes.Clientset
+)
 
 func CheckErr(err error) {
 	if err != nil {
