@@ -32,6 +32,9 @@ type Hook struct {
 }
 
 func cleaner(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "POST" {
+		_, _ = fmt.Fprintf(w, "400")
+	}
 	var hook Hook
 	err := json.NewDecoder(r.Body).Decode(&hook)
 	log.WithFields(log.Fields{
@@ -63,6 +66,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if selector == "" {
+		log.Debug("no action needed")
 		return nil
 	}
 
