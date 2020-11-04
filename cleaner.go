@@ -21,7 +21,7 @@ type Hook struct {
 	} `json:"repository"`
 
 	// pr action
-	Action      string `json:"action"` // either "opened" or "closed" if pr
+	Action      string `json:"action"` // either "opened", "closed" or "reopened if pr
 	Number      int    `json:"number"`
 	PullRequest struct {
 		Head struct {
