@@ -46,6 +46,12 @@ func logInit() {
 func main() {
 	logInit()
 	err := envconfig.Process("cleaner", &C)
+	if C.Debug {
+		log.Info("running in debug mode")
+		log.SetLevel(log.DebugLevel)
+	}
+
+	log.Debugf("using config %+v", C)
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
