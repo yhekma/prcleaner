@@ -31,10 +31,16 @@ type Hook struct {
 	} `json:"pull_request"`
 }
 
-func CleanerServer(w http.ResponseWriter, r *http.Request) {
+func cleaner(w http.ResponseWriter, r *http.Request) error {
 	var hook Hook
 	err := json.NewDecoder(r.Body).Decode(&hook)
-	CheckErr(err)
+	log.WithFields(log.Fields{
+		"hook content": fmt.Sprintf("%+v", hook),
+	}).Debug("decoded hook")
+	if err != nil {
+		return err
+	}
+
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selector string
 
@@ -56,6 +62,10 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 			"%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, hook.Repository.Name, C.CommitShaLabel, hook.Before)
 	}
 
+	if selector == "" {
+		return nil
+	}
+
 	log.Debug("using selector ", selector)
 
 	listOptions := metav1.ListOptions{
@@ -63,7 +73,9 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
-	CheckErr(err)
+	if err != nil {
+		return err
+	}
 	for _, pod := range pods.Items {
 		release := pod.Labels[C.ReleaseLabel]
 		if release == "" {
@@ -82,10 +94,18 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 		} else {
 			out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release).Output()
 		}
-		CheckErr(err)
+		if err != nil {
+			return err
+		}
 		log.WithFields(log.Fields{
 			"helm command": fmt.Sprintf("/bin/helm uninstall -n %s %s --dry-run", pod.Namespace, release),
 			"output":       string(out),
 		}).Debug()
 	}
+	return nil
+}
+
+func CleanerServer(w http.ResponseWriter, r *http.Request) {
+	err := cleaner(w, r)
+	CheckErr(err)
 }
