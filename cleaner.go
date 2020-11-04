@@ -40,20 +40,20 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 
 	if hook.Action == "closed" {
 		selector = fmt.Sprintf(
-			"%s=PR-%d,%s=%s,%s=%s", *BranchLabel, hook.Number, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.PullRequest.Head.Sha,
+			"%s=PR-%d,%s=%s,%s=%s", BranchLabel, hook.Number, RepoLabel, hook.Repository.Name, CommitShaLabel, hook.PullRequest.Head.Sha,
 		)
 	}
 
 	if hook.Action == "opened" {
 		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s=%s", *BranchLabel, hook.PullRequest.Head.Ref, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.PullRequest.Head.Sha,
+			"%s=%s,%s=%s,%s=%s", BranchLabel, hook.PullRequest.Head.Ref, RepoLabel, hook.Repository.Name, CommitShaLabel, hook.PullRequest.Head.Sha,
 		)
 	}
 
 	if hook.Deleted { // Branch deletion
 		branchName := strings.Split(hook.Ref, "/")[2]
 		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s=%s", *BranchLabel, branchName, *RepoLabel, hook.Repository.Name, *CommitShaLabel, hook.Before)
+			"%s=%s,%s=%s,%s=%s", BranchLabel, branchName, RepoLabel, hook.Repository.Name, CommitShaLabel, hook.Before)
 	}
 
 	log.Debug("using selector ", selector)
@@ -65,7 +65,7 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
 	CheckErr(err)
 	for _, pod := range pods.Items {
-		release := pod.Labels[*ReleaseLabel]
+		release := pod.Labels[ReleaseLabel]
 		if release == "" {
 			continue
 		}
@@ -77,7 +77,7 @@ func CleanerServer(w http.ResponseWriter, r *http.Request) {
 		}).Debug("found pod to delete")
 
 		var out []byte
-		if *Dryrun {
+		if Dryrun {
 			out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, "--dry-run").Output()
 		} else {
 			out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release).Output()
