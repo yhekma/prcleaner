@@ -32,9 +32,6 @@ type Hook struct {
 }
 
 func CleanerServer(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/echo/alive" || r.URL.Path == "/echo/ready" {
-		_, _ = fmt.Fprintf(w, "200")
-	}
 	var hook Hook
 	err := json.NewDecoder(r.Body).Decode(&hook)
 	CheckErr(err)
