@@ -53,7 +53,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		)
 	}
 
-	if hook.Action == "opened" {
+	if hook.Action == "opened" || hook.Action == "reopened" {
 		selector = fmt.Sprintf(
 			"%s=%s,%s=%s,%s=%s", C.BranchLabel, hook.PullRequest.Head.Ref, C.RepoLabel, hook.Repository.Name, C.CommitShaLabel, hook.PullRequest.Head.Sha,
 		)
