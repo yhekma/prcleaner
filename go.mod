@@ -1,4 +1,4 @@
-module github.az.fxei.fedex.com/3741836/prcleaner
+module https://github.com/yhekma/prcleaner
 
 go 1.15
 
