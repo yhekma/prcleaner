@@ -9,6 +9,7 @@ Program uses the following env variables:
 * `CLEANER_BRANCHLABEL` label to match branches on, default `app.fedex.io/git-branch`
 * `CLEANER_COMMITSHALABEL` label to match sha on, default `app.fedex.io/git-commit`
 * `CLEANER_REPOLABEL` label to match reposutory on, default `app.fedex.io/git-repository`
+* `CLEANER_SECRET` secret for the webhook to be used
 * `CLEANER_DRYRUN` self-explanatory
 * `CLEANER_DEBUG` self-explanatory
 

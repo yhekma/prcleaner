@@ -14,9 +14,9 @@ type Config struct {
 	BranchLabel    string `default:"app.fedex.io/git-branch"`
 	CommitShaLabel string `default:"app.fedex.io/git-commit"`
 	RepoLabel      string `default:"app.fedex.io/git-repository"`
-	Secret         string
-	Dryrun         bool `default:"true"`
-	Debug          bool `default:"true"`
+	Secret         string `required:"true"`
+	Dryrun         bool   `default:"true"`
+	Debug          bool   `default:"true"`
 }
 
 var (
