@@ -58,7 +58,6 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.Debugf("using config %+v", C)
 	log.WithFields(log.Fields{
 		"releaselabel":   C.ReleaseLabel,
 		"branchlabel":    C.BranchLabel,
