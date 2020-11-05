@@ -34,7 +34,12 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 
 	switch e := hook.(type) {
 	case *github.PullRequestEvent:
-		log.Debugf("received %+v", e)
+		log.WithFields(log.Fields{
+			"action":   *e.Action,
+			"number":   e.Number,
+			"reponame": *e.Repo.Name,
+			"sha":      *e.PullRequest.Head.SHA,
+		}).Debug("received pr")
 
 		if *e.Action == "closed" {
 			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
@@ -45,9 +50,12 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			)
 		}
 	case *github.PushEvent:
-		log.Debugf("received %+v", e)
+		branchName := strings.Split(*e.Ref, "/")[2]
+		log.WithFields(log.Fields{
+			"branch":   branchName,
+			"reponame": *e.Repo.Name,
+		}).Debug("received pushevent")
 		if *e.Deleted {
-			branchName := strings.Split(*e.Ref, "/")[2]
 			selector = fmt.Sprintf(
 				"%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name,
 			)
