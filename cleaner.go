@@ -54,6 +54,8 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		log.WithFields(log.Fields{
 			"branch":   branchName,
 			"reponame": *e.Repo.Name,
+			"deleted":  e.Deleted,
+			"created":  e.Created,
 		}).Debug("received pushevent")
 		if *e.Deleted {
 			selector = fmt.Sprintf(
