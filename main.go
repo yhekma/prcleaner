@@ -31,10 +31,14 @@ func CheckErr(err error) {
 }
 
 func getKubeCtx() *kubernetes.Clientset {
+	log.Debug("get clusterconfig")
 	config, err := rest.InClusterConfig()
 	CheckErr(err)
+	log.Debug("got clusterconfig")
+	log.Debug("get clientset")
 	clientset, err := kubernetes.NewForConfig(config)
 	CheckErr(err)
+	log.Debug("got clientset")
 	return clientset
 }
 
@@ -46,7 +50,9 @@ func logInit() {
 
 func main() {
 	logInit()
+	log.Info("process environment")
 	err := envconfig.Process("cleaner", &C)
+	log.Info("processed environment")
 	if C.Debug {
 		log.Info("running in debug mode")
 		log.SetLevel(log.DebugLevel)
@@ -56,6 +62,7 @@ func main() {
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
+	log.Info("starting server")
 	err = http.ListenAndServe(":8000", handler)
 	CheckErr(err)
 }

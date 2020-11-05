@@ -30,7 +30,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selector string
 
-	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
+	log.Infof("got hook of type %s", reflect.TypeOf(hook))
 
 	switch e := hook.(type) {
 	case *github.PullRequestEvent:
@@ -59,7 +59,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	log.Debug("using selector ", selector)
+	log.Info("using selector ", selector)
 
 	listOptions := metav1.ListOptions{
 		LabelSelector: selector,
@@ -72,13 +72,16 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	for _, pod := range pods.Items {
 		release := pod.Labels[C.ReleaseLabel]
 		if release == "" {
+			log.Debugf("release label not set for pod %s", pod.Name)
 			continue
 		}
 
 		log.WithFields(log.Fields{
 			"pod":       pod.Name,
 			"namespace": pod.Namespace,
-		}).Debug("found pod to delete")
+		}).Debug("found matching pod")
+
+		log.Infof("deleting release %s (except when in dryrun mode", release)
 
 		var out []byte
 		if C.Dryrun {
