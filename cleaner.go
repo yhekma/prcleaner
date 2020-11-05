@@ -45,7 +45,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		if *e.Deleted {
 			branchName := strings.Split(*e.Ref, "/")[2]
 			selector = fmt.Sprintf(
-				"%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.Before,
+				"%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name,
 			)
 		}
 	}
