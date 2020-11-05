@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"os/exec"
+	"reflect"
 	"strings"
 )
 
@@ -29,9 +30,12 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selector string
 
+	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
+
 	switch e := hook.(type) {
 	case *github.PullRequestEvent:
 		log.Debugf("received %+v", e)
+
 		if *e.Action == "closed" {
 			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
 		}
