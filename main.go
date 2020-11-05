@@ -59,6 +59,15 @@ func main() {
 	}
 
 	log.Debugf("using config %+v", C)
+	log.WithFields(log.Fields{
+		"releaselabel":   C.ReleaseLabel,
+		"branchlabel":    C.BranchLabel,
+		"commitshalabel": C.CommitShaLabel,
+		"repolabel":      C.RepoLabel,
+		"dryrun":         C.Dryrun,
+		"debug":          C.Debug,
+		"secret":         "<redacted>",
+	}).Info("running config")
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
