@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
@@ -11,35 +11,17 @@ import (
 	"strings"
 )
 
-type Hook struct {
-	// branch action
-	Ref        string `json:"ref"`
-	Before     string `json:"before"` // This is sha
-	Deleted    bool   `json:"deleted"`
-	Repository struct {
-		Name string `json:"name"`
-	} `json:"repository"`
-
-	// pr action
-	Action      string `json:"action"` // either "opened", "closed" or "reopened if pr
-	Number      int    `json:"number"`
-	PullRequest struct {
-		Head struct {
-			Sha string `json:"sha"`
-			Ref string `json:"ref"`
-		} `json:"head"`
-	} `json:"pull_request"`
-}
-
 func cleaner(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
 		_, _ = fmt.Fprintf(w, "400")
 	}
-	var hook Hook
-	err := json.NewDecoder(r.Body).Decode(&hook)
-	log.WithFields(log.Fields{
-		"hook content": fmt.Sprintf("%+v", hook),
-	}).Debug("decoded hook")
+	payload, err := github.ValidatePayload(r, []byte(C.Secret))
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	hook, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
 		return err
 	}
@@ -47,22 +29,25 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selector string
 
-	if hook.Action == "closed" {
-		selector = fmt.Sprintf(
-			"%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, hook.Number, C.RepoLabel, hook.Repository.Name, C.CommitShaLabel, hook.PullRequest.Head.Sha,
-		)
-	}
-
-	if hook.Action == "opened" || hook.Action == "reopened" {
-		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s=%s", C.BranchLabel, hook.PullRequest.Head.Ref, C.RepoLabel, hook.Repository.Name, C.CommitShaLabel, hook.PullRequest.Head.Sha,
-		)
-	}
-
-	if hook.Deleted { // Branch deletion
-		branchName := strings.Split(hook.Ref, "/")[2]
-		selector = fmt.Sprintf(
-			"%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, hook.Repository.Name, C.CommitShaLabel, hook.Before)
+	switch e := hook.(type) {
+	case *github.PullRequestEvent:
+		log.Debugf("received %+v", e)
+		if *e.Action == "closed" {
+			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
+		}
+		if *e.Action == "opened" || *e.Action == "reopened" {
+			selector = fmt.Sprintf(
+				"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA,
+			)
+		}
+	case *github.PushEvent:
+		log.Debugf("received %+v", e)
+		if *e.Deleted {
+			branchName := strings.Split(*e.Ref, "/")[2]
+			selector = fmt.Sprintf(
+				"%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.Before,
+			)
+		}
 	}
 
 	if selector == "" {
@@ -89,7 +74,6 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		log.WithFields(log.Fields{
 			"pod":       pod.Name,
 			"namespace": pod.Namespace,
-			"hook":      hook.Number,
 		}).Debug("found pod to delete")
 
 		var out []byte
