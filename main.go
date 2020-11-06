@@ -11,9 +11,9 @@ import (
 
 type Config struct {
 	ReleaseLabel   string `default:"helm.sh/release"`
-	BranchLabel    string `default:"app.fedex.io/git-branch"`
-	CommitShaLabel string `default:"app.fedex.io/git-commit"`
-	RepoLabel      string `default:"app.fedex.io/git-repository"`
+	BranchLabel    string
+	CommitShaLabel string
+	RepoLabel      string
 	Secret         string `required:"true"`
 	Dryrun         bool   `default:"true"`
 	Debug          bool   `default:"true"`

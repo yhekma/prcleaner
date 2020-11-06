@@ -1,4 +1,4 @@
-module https://github.com/yhekma/prcleaner
+module https: //github.com/yhekma/prcleaner
 
 go 1.15
 
