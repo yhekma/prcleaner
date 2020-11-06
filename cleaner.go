@@ -42,7 +42,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		}).Debug("received pr")
 
 		if *e.Action == "closed" {
-			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
+			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
 			selector = fmt.Sprintf(
