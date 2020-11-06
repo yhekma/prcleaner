@@ -28,7 +28,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
-	var selector string
+	var selector []string
 
 	log.Infof("got hook of type %s", reflect.TypeOf(hook))
 
@@ -41,12 +41,17 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"sha":      *e.PullRequest.Head.SHA,
 		}).Debug("received pr")
 
-		if *e.Action == "closed" {
-			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA)
+		if *e.PullRequest.State == "closed" {
+			selector = append(selector,
+				fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner),
+				fmt.Sprintf("%s=%s,%s=%s,%s=%v", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner),
+			)
 		}
-		if *e.Action == "opened" || *e.Action == "reopened" {
-			selector = fmt.Sprintf(
-				"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.CommitShaLabel, *e.PullRequest.Head.SHA,
+		if *e.PullRequest.State == "opened" || *e.PullRequest.State == "reopened" {
+			selector = append(selector,
+				fmt.Sprintf(
+					"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner,
+				),
 			)
 		}
 	case *github.PushEvent:
@@ -58,23 +63,30 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"created":  e.Created,
 		}).Debug("received pushevent")
 		if *e.Deleted {
-			selector = fmt.Sprintf(
-				"%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name,
+			selector = append(selector,
+				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name),
 			)
 		}
-	}
-
-	if selector == "" {
+	default:
 		log.Debug("no action needed")
 		return nil
 	}
 
-	log.Info("using selector ", selector)
-
-	listOptions := metav1.ListOptions{
-		LabelSelector: selector,
+	for _, s := range selector {
+		log.Info("using selector ", selector)
+		listOptions := metav1.ListOptions{
+			LabelSelector: s,
+		}
+		if err := findAndDelete(listOptions); err != nil {
+			log.Warn("could not select using selector ", err.Error())
+		}
 	}
 
+	return nil
+
+}
+
+func findAndDelete(listOptions metav1.ListOptions) error {
 	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
 	if err != nil {
 		return err
