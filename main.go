@@ -10,13 +10,13 @@ import (
 )
 
 type Config struct {
-	ReleaseLabel   string `default:"helm.sh/release"`
-	BranchLabel    string `default:"app.fedex.io/git-branch"`
-	CommitShaLabel string `default:"app.fedex.io/git-commit"`
-	RepoLabel      string `default:"app.fedex.io/git-repository"`
-	Secret         string `required:"true"`
-	Dryrun         bool   `default:"true"`
-	Debug          bool   `default:"true"`
+	ReleaseLabel string `default:"helm.sh/release"`
+	BranchLabel  string `default:"app.fedex.io/git-branch"`
+	OwnerLabel   string `default:"app.fedex.io/git-owner"`
+	RepoLabel    string `default:"app.fedex.io/git-repository"`
+	Secret       string `required:"true"`
+	Dryrun       bool   `default:"true"`
+	Debug        bool   `default:"true"`
 }
 
 var (
@@ -59,13 +59,13 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"releaselabel":   C.ReleaseLabel,
-		"branchlabel":    C.BranchLabel,
-		"commitshalabel": C.CommitShaLabel,
-		"repolabel":      C.RepoLabel,
-		"dryrun":         C.Dryrun,
-		"debug":          C.Debug,
-		"secret":         "<redacted>",
+		"releaselabel": C.ReleaseLabel,
+		"branchlabel":  C.BranchLabel,
+		"ownerlabel":   C.OwnerLabel,
+		"repolabel":    C.RepoLabel,
+		"dryrun":       C.Dryrun,
+		"debug":        C.Debug,
+		"secret":       "<redacted>",
 	}).Info("running config")
 
 	Clientset = getKubeCtx()

@@ -7,7 +7,7 @@ Service that you can push json to using github webhooks to delete helm releases
 Program uses the following env variables:
 * `CLEANER_RELEASELABEL` label to match releases on, default `helm.sh/release`
 * `CLEANER_BRANCHLABEL` label to match branches on, default `app.fedex.io/git-branch`
-* `CLEANER_COMMITSHALABEL` label to match sha on, default `app.fedex.io/git-commit`
+* `CLEANER_OWNERLABEL` label to match owner on, default `app.fedex.io/git-owner`
 * `CLEANER_REPOLABEL` label to match reposutory on, default `app.fedex.io/git-repository`
 * `CLEANER_SECRET` secret for the webhook to be used
 * `CLEANER_DRYRUN` self-explanatory
