@@ -41,13 +41,13 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"sha":      *e.PullRequest.Head.SHA,
 		}).Debug("received pr")
 
-		if *e.PullRequest.State == "closed" {
+		if *e.Action == "closed" {
 			selector = append(selector,
 				fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner),
 				fmt.Sprintf("%s=%s,%s=%s,%s=%v", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner),
 			)
 		}
-		if *e.PullRequest.State == "opened" || *e.PullRequest.State == "reopened" {
+		if *e.Action == "opened" || *e.Action == "reopened" {
 			selector = append(selector,
 				fmt.Sprintf(
 					"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner,
