@@ -105,24 +105,24 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 	if C.Dryrun {
 		dryrunString = "--dry-run"
 	}
-	deployments, err := Clientset.ExtensionsV1beta1().Deployments("").List(context.TODO(), listOptions)
+	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
 	if err != nil {
 		return err
 	}
-	for _, deployment := range deployments.Items {
-		release := deployment.Labels[C.ReleaseLabel]
+	for _, pod := range pods.Items {
+		release := pod.Labels[C.ReleaseLabel]
 		if release == "" {
-			log.Debugf("release label not set for deployment %s", deployment.Name)
+			log.Debugf("release label not set for pod %s", pod.Name)
 			continue
 		}
 
 		log.WithFields(log.Fields{
-			"deployment": deployment.Name,
-			"namespace":  deployment.Namespace,
-		}).Debug("found matching deployment")
+			"pod":       pod.Name,
+			"namespace": pod.Namespace,
+		}).Debug("found matching pod")
 
-		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", deployment.Namespace, release)
-		deleteCommand := fmt.Sprintf("/bin/helm uninstall -n %s %s %s", deployment.Namespace, release, dryrunString)
+		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", pod.Namespace, release)
+		deleteCommand := fmt.Sprintf("/bin/helm uninstall -n %s %s %s", pod.Namespace, release, dryrunString)
 		log.WithFields(log.Fields{
 			"line to be executed": deleteCommand,
 		}).Debug()
@@ -131,7 +131,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		if err != nil {
 			log.WithFields(log.Fields{
 				"stderr": errout,
-			}).Debug("could not delete helm release")
+			}).Debug("could not delete pods")
 		}
 		log.WithFields(log.Fields{
 			"stdout": out,
