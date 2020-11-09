@@ -89,6 +89,10 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 }
 
 func findAndDelete(listOptions metav1.ListOptions) error {
+	var dryrunString string
+	if C.Dryrun {
+		dryrunString = "--dry-run"
+	}
 	pods, err := Clientset.CoreV1().Pods("").List(context.TODO(), listOptions)
 	if err != nil {
 		return err
@@ -108,16 +112,12 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		log.Infof("deleting release %s (except when in dryrun mode", release)
 
 		var out []byte
-		if C.Dryrun {
-			out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, "--dry-run").Output()
-		} else {
-			out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release).Output()
-		}
+		out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, dryrunString).Output()
 		if err != nil {
 			return err
 		}
 		log.WithFields(log.Fields{
-			"helm command": fmt.Sprintf("/bin/helm uninstall -n %s %s --dry-run", pod.Namespace, release),
+			"helm command": fmt.Sprintf("/bin/helm uninstall -n %s %s %s", pod.Namespace, release, dryrunString),
 			"output":       string(out),
 		}).Debug()
 	}
