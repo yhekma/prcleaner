@@ -28,7 +28,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
-	var selector []string
+	var selectors []string
 
 	log.Infof("got hook of type %s", reflect.TypeOf(hook))
 
@@ -42,13 +42,15 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		}).Debug("received pr")
 
 		if *e.Action == "closed" {
-			selector = append(selector,
+			log.Debug("closed pr")
+			selectors = append(selectors,
 				fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
 				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
 			)
+			log.Debug("selectors are %v", selectors)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
-			selector = append(selector,
+			selectors = append(selectors,
 				fmt.Sprintf(
 					"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login,
 				),
@@ -63,7 +65,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"created":  e.Created,
 		}).Debug("received pushevent")
 		if *e.Deleted {
-			selector = append(selector,
+			selectors = append(selectors,
 				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name),
 			)
 		}
@@ -72,13 +74,13 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	for _, s := range selector {
-		log.Info("using selector ", selector)
+	for _, s := range selectors {
+		log.Info("using selector ", s)
 		listOptions := metav1.ListOptions{
 			LabelSelector: s,
 		}
 		if err := findAndDelete(listOptions); err != nil {
-			log.Warn("could not select using selector ", err.Error())
+			log.Warn("could not select using selectors ", err.Error())
 		}
 	}
 
