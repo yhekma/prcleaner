@@ -109,7 +109,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 			"namespace": pod.Namespace,
 		}).Debug("found matching pod")
 
-		log.Infof("deleting release %s (except when in dryrun mode", release)
+		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", pod.Namespace, release)
 
 		var out []byte
 		out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, dryrunString).Output()
