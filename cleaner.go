@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/google/go-github/v32/github"
@@ -11,6 +12,18 @@ import (
 	"reflect"
 	"strings"
 )
+
+const shell = "sh"
+
+func runCommand(command string) (error, string, string) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command(shell, "-c", command)
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	err := cmd.Run()
+	return err, stdout.String(), stderr.String()
+}
 
 func cleaner(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
@@ -85,7 +98,6 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return nil
-
 }
 
 func findAndDelete(listOptions metav1.ListOptions) error {
@@ -110,16 +122,19 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		}).Debug("found matching pod")
 
 		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", pod.Namespace, release)
+		deleteCommand := fmt.Sprintf("/bin/helm uninstall -n %s %s %s", pod.Namespace, release, dryrunString)
+		log.WithFields(log.Fields{
+			"line to be executed": deleteCommand,
+		}).Debug()
 
-		var out []byte
-		out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, dryrunString).Output()
+		err, out, errout := runCommand(deleteCommand)
 		if err != nil {
-			log.Debugf("could not delete pods %v", err)
-			return err
+			log.WithFields(log.Fields{
+				"stderr": errout,
+			}).Debug("could not delete pods")
 		}
 		log.WithFields(log.Fields{
-			"helm command": fmt.Sprintf("/bin/helm uninstall -n %s %s %s", pod.Namespace, release, dryrunString),
-			"output":       string(out),
+			"stdout": out,
 		}).Debug()
 	}
 	return nil
