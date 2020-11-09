@@ -132,6 +132,8 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 			log.WithFields(log.Fields{
 				"stderr": errout,
 			}).Debug("could not delete deployments")
+		} else {
+			log.Info("release %s deleted", release)
 		}
 		log.WithFields(log.Fields{
 			"stdout": out,
