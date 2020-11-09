@@ -80,7 +80,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			LabelSelector: s,
 		}
 		if err := findAndDelete(listOptions); err != nil {
-			log.Info("no pods found")
+			log.Info("no pods found or unable to delete")
 		}
 	}
 
@@ -114,6 +114,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		var out []byte
 		out, err = exec.Command("/bin/helm", "uninstall", "-n", pod.Namespace, release, dryrunString).Output()
 		if err != nil {
+			log.Debugf("could not delete pods %v", err)
 			return err
 		}
 		log.WithFields(log.Fields{
