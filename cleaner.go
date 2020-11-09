@@ -80,7 +80,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			LabelSelector: s,
 		}
 		if err := findAndDelete(listOptions); err != nil {
-			log.Warn("could not select using selectors ", err.Error())
+			log.Warn("could not select using selectors ", err)
 		}
 	}
 
