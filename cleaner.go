@@ -60,7 +60,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 				fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
 				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
 			)
-			log.Debug("selectors are %v", selectors)
+			log.Debugf("selectors are %s", selectors)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
 			selectors = append(selectors,
