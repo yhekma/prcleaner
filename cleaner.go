@@ -121,7 +121,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 			"namespace":  deployment.Namespace,
 		}).Debug("found matching deployment")
 
-		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", deployment.Namespace, release)
+		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", release, deployment.Namespace)
 		deleteCommand := fmt.Sprintf("/bin/helm uninstall -n %s %s %s", deployment.Namespace, release, dryrunString)
 		log.WithFields(log.Fields{
 			"line to be executed": deleteCommand,
