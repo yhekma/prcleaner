@@ -43,7 +43,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	var selectors []string
 
-	log.Infof("got hook of type %s", reflect.TypeOf(hook))
+	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
 
 	switch e := hook.(type) {
 	case *github.PullRequestEvent:
@@ -131,11 +131,14 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		if err != nil {
 			log.WithFields(log.Fields{
 				"stderr": errout,
-			}).Debug("could not delete deployments")
+			}).Info("could not delete deployments")
 		} else {
 			log.WithFields(log.Fields{
-				"release":   release,
-				"namespace": deployment.Namespace,
+				"release":            release,
+				"namespace":          deployment.Namespace,
+				"matched deployment": deployment.Name,
+				"repo":               deployment.Labels[C.RepoLabel],
+				"branch":             deployment.Labels[C.BranchLabel],
 			}).Info("release deleted")
 		}
 		log.WithFields(log.Fields{
