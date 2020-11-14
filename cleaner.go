@@ -41,7 +41,8 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
-	var selectors []string
+	// If for any reason we fall through the select below, we don't want to have an empty selector
+	selector := "nomatch=true"
 
 	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
 
@@ -56,18 +57,10 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 
 		if *e.Action == "closed" {
 			log.Debug("closed pr")
-			selectors = append(selectors,
-				fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
-				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login),
-			)
-			log.Debugf("selectors are %s", selectors)
+			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
-			selectors = append(selectors,
-				fmt.Sprintf(
-					"%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login,
-				),
-			)
+			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 	case *github.PushEvent:
 		branchName := strings.Split(*e.Ref, "/")[2]
@@ -78,23 +71,22 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"created":  e.Created,
 		}).Debug("received pushevent")
 		if *e.Deleted {
-			selectors = append(selectors,
-				fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name),
-			)
+			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
 		}
 	default:
 		log.Debug("no action needed")
 		return nil
 	}
 
-	for _, s := range selectors {
-		log.Info("using selector ", s)
-		listOptions := metav1.ListOptions{
-			LabelSelector: s,
-		}
-		if err := findAndDelete(listOptions); err != nil {
-			log.Info("no deployments found or unable to delete")
-		}
+	log.WithFields(log.Fields{
+		"selector": selector,
+	}).Debug("using selector")
+
+	listOptions := metav1.ListOptions{
+		LabelSelector: selector,
+	}
+	if err := findAndDelete(listOptions); err != nil {
+		log.Info("no deployments found or unable to delete")
 	}
 
 	return nil
@@ -122,6 +114,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 		}).Debug("found matching deployment")
 
 		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", release, deployment.Namespace)
+		// If we match more than 1 release, something is very wrong
 		if len(release) > 1 {
 			log.WithFields(log.Fields{
 				"releases": release,
