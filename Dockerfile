@@ -9,6 +9,8 @@ RUN go build -o ../cleaner .
 RUN tar xzf helm*.tar.gz
 RUN chmod a+x linux-amd64/helm
 FROM alpine:3.10.3
+RUN adduser -S -D -H -h /app appuser
+USER appuser
 COPY --from=builder /build/cleaner /app/
 COPY --from=builder /build/src/linux-amd64/helm /bin
 WORKDIR /app
