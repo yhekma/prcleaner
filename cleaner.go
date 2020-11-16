@@ -115,7 +115,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 
 		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", release, deployment.Namespace)
 		// If we match more than 1 release, something is very wrong
-		if len(release) > 1 {
+		if len(strings.Split(release, " ")) > 1 {
 			log.WithFields(log.Fields{
 				"releases": release,
 			}).Panic("more than 1 release matched, aborting")
