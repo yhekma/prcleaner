@@ -74,9 +74,6 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		if *e.Deleted {
 			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
 		}
-	default:
-		log.Debug("no action needed")
-		return nil
 	}
 
 	if selector == nomatch {
