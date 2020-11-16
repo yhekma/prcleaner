@@ -13,6 +13,7 @@ pipeline {
       agent any
       steps {
         prepareEnvironment()
+        removeDocker()
       }
     }
 
