@@ -14,6 +14,7 @@ import (
 )
 
 const shell = "sh"
+const nomatch = "nomatch=true"
 
 func runCommand(command string) (error, string, string) {
 	var stdout bytes.Buffer
@@ -42,7 +43,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 
 	_, _ = fmt.Fprint(w, http.StatusAccepted)
 	// If for any reason we fall through the select below, we don't want to have an empty selector
-	selector := "nomatch=true"
+	selector := nomatch
 
 	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
 
@@ -74,6 +75,11 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
 		}
 	default:
+		log.Debug("no action needed")
+		return nil
+	}
+
+	if selector == nomatch {
 		log.Debug("no action needed")
 		return nil
 	}
