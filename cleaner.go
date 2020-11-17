@@ -89,7 +89,9 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		LabelSelector: selector,
 	}
 	if err := findAndDelete(listOptions); err != nil {
-		log.Info("no deployments found or unable to delete")
+		log.WithFields(log.Fields{
+			"selector": selector,
+		}).Info("no deployments found or unable to delete")
 	}
 
 	return nil
