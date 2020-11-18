@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -64,15 +65,19 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 	case *github.PushEvent:
-		branchName := strings.Split(*e.Ref, "/")[2]
+		branchName := strings.ReplaceAll(*e.Ref, "refs/heads/", "")
+		re := regexp.MustCompile(`[\W_]`)
+		saneBranchName := re.ReplaceAllString(branchName, "-")
+
 		log.WithFields(log.Fields{
-			"branch":   branchName,
-			"reponame": *e.Repo.Name,
-			"deleted":  e.Deleted,
-			"created":  e.Created,
+			"branch":                branchName,
+			"sanitized branch name": saneBranchName,
+			"reponame":              *e.Repo.Name,
+			"deleted":               e.Deleted,
+			"created":               e.Created,
 		}).Debug("received pushevent")
 		if *e.Deleted {
-			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, branchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
+			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, saneBranchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
 		}
 	}
 
