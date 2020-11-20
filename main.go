@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"net/http"
@@ -23,6 +26,14 @@ var (
 	C         Config
 	Clientset *kubernetes.Clientset
 )
+
+func getOwnHash() (hash string) {
+	hasher := sha256.New()
+	s, err := ioutil.ReadFile(os.Args[0])
+	CheckErr(err)
+	hasher.Write(s)
+	return hex.EncodeToString(hasher.Sum(nil))
+}
 
 func CheckErr(err error) {
 	if err != nil {
@@ -65,6 +76,7 @@ func main() {
 		"repolabel":    C.RepoLabel,
 		"dryrun":       C.Dryrun,
 		"debug":        C.Debug,
+		"hash":         getOwnHash(),
 		"secret":       "<redacted>",
 	}).Info("running config")
 
