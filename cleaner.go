@@ -46,6 +46,8 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	// If for any reason we fall through the select below, we don't want to have an empty selector
 	selector := nomatch
 
+	re := regexp.MustCompile(`[\W_]`)
+
 	log.Debugf("got hook of type %s", reflect.TypeOf(hook))
 
 	switch e := hook.(type) {
@@ -62,11 +64,11 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
-			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, *e.PullRequest.Head.Ref, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
+			saneRef := re.ReplaceAllString(*e.PullRequest.Head.Ref, "-")
+			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, saneRef, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 	case *github.PushEvent:
 		branchName := strings.ReplaceAll(*e.Ref, "refs/heads/", "")
-		re := regexp.MustCompile(`[\W_]`)
 		saneBranchName := re.ReplaceAllString(branchName, "-")
 
 		log.WithFields(log.Fields{
