@@ -27,6 +27,13 @@ func runCommand(command string) (error, string, string) {
 	return err, stdout.String(), stderr.String()
 }
 
+func trimString(s string, l int) string {
+	if len(s) > l {
+		return s[:l]
+	}
+	return s
+}
+
 func cleaner(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
 		_, _ = fmt.Fprintf(w, "400")
@@ -64,12 +71,12 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			selector = fmt.Sprintf("%s=PR-%d,%s=%s,%s=%s", C.BranchLabel, *e.Number, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 		if *e.Action == "opened" || *e.Action == "reopened" {
-			saneRef := re.ReplaceAllString(*e.PullRequest.Head.Ref, "-")
+			saneRef := trimString(re.ReplaceAllString(*e.PullRequest.Head.Ref, "-"), 62)
 			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, saneRef, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.PullRequest.Head.Repo.Owner.Login)
 		}
 	case *github.PushEvent:
 		branchName := strings.ReplaceAll(*e.Ref, "refs/heads/", "")
-		saneBranchName := re.ReplaceAllString(branchName, "-")
+		saneBranchName := trimString(re.ReplaceAllString(branchName, "-"), 62)
 
 		log.WithFields(log.Fields{
 			"branch":                branchName,
