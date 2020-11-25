@@ -167,6 +167,9 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 }
 
 func CleanerServer(w http.ResponseWriter, r *http.Request) {
+	log.WithFields(log.Fields{
+		"connection from": r.Header.Get("Origin"),
+	}).Debug()
 	err := cleaner(w, r)
 	CheckErr(err)
 }
