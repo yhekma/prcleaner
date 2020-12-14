@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const shell = "sh"
@@ -107,6 +108,15 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"selector": selector,
 		}).Info("no deployments found or unable to delete")
 	}
+
+	// Rerun the same after 5 minutes to try and catch race conditions
+	go func(l metav1.ListOptions) {
+		time.Sleep(time.Duration(C.Delay) * time.Second)
+		log.WithFields(log.Fields{
+			"selector": selector,
+		}).Info("rerunning after %d seconds", C.Delay)
+		_ = findAndDelete(l)
+	}(listOptions)
 
 	return nil
 }

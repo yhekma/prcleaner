@@ -18,6 +18,7 @@ type Config struct {
 	OwnerLabel   string `default:"app.fedex.io/git-owner"`
 	RepoLabel    string `default:"app.fedex.io/git-repository"`
 	Secret       string `required:"true"`
+	Delay        int    `default:"300"`
 	Dryrun       bool   `default:"true"`
 	Debug        bool   `default:"true"`
 }
