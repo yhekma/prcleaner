@@ -114,7 +114,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		time.Sleep(time.Duration(C.Delay) * time.Second)
 		log.WithFields(log.Fields{
 			"selector": selector,
-		}).Info("rerunning after %d seconds", C.Delay)
+		}).Debug("rerunning after %d seconds", C.Delay)
 		_ = findAndDelete(l)
 	}(listOptions)
 
