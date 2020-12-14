@@ -103,19 +103,24 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 	listOptions := metav1.ListOptions{
 		LabelSelector: selector,
 	}
-	if err := findAndDelete(listOptions); err != nil {
-		log.WithFields(log.Fields{
-			"selector": selector,
-		}).Info("no deployments found or unable to delete")
-	}
+
+	log.WithFields(log.Fields{
+		"selector": selector,
+	}).Info("no deployments found or unable to delete")
+	err = findAndDelete(listOptions)
+	CheckErr(err, "could not delete releases")
 
 	// Rerun the same after 5 minutes to try and catch race conditions
 	go func(l metav1.ListOptions) {
+		log.WithFields(log.Fields{
+			"selector": selector,
+		}).Debugf("scheduling to run after %d seconds", C.Delay)
 		time.Sleep(time.Duration(C.Delay) * time.Second)
 		log.WithFields(log.Fields{
 			"selector": selector,
 		}).Debugf("rerunning after %d seconds", C.Delay)
-		_ = findAndDelete(l)
+		err = findAndDelete(l)
+		CheckErr(err, "could not delete releases")
 	}(listOptions)
 
 	return nil
@@ -178,5 +183,5 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 
 func CleanerServer(w http.ResponseWriter, r *http.Request) {
 	err := cleaner(w, r)
-	CheckErr(err)
+	CheckErr(err, "could not start cleaner")
 }

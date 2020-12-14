@@ -31,25 +31,27 @@ var (
 func getOwnHash() (hash string) {
 	hasher := sha256.New()
 	s, err := ioutil.ReadFile(os.Args[0])
-	CheckErr(err)
+	CheckErr(err, "error getting own hash")
 	hasher.Write(s)
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func CheckErr(err error) {
+func CheckErr(err error, msg string) {
 	if err != nil {
-		log.Warn(err.Error())
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Warn(msg)
 	}
 }
 
 func getKubeCtx() *kubernetes.Clientset {
 	log.Debug("get clusterconfig")
 	config, err := rest.InClusterConfig()
-	CheckErr(err)
+	CheckErr(err, "error getting cluster config")
 	log.Debug("got clusterconfig")
 	log.Debug("get clientset")
 	clientset, err := kubernetes.NewForConfig(config)
-	CheckErr(err)
+	CheckErr(err, "error getting clientset")
 	log.Debug("got clientset")
 	return clientset
 }
@@ -85,5 +87,5 @@ func main() {
 	handler := http.HandlerFunc(CleanerServer)
 	log.Info("starting server")
 	err = http.ListenAndServe(":8000", handler)
-	CheckErr(err)
+	CheckErr(err, "could not start listener")
 }
