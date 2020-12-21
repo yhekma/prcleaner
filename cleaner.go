@@ -104,9 +104,6 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		LabelSelector: selector,
 	}
 
-	log.WithFields(log.Fields{
-		"selector": selector,
-	}).Info("no deployments found or unable to delete")
 	err = findAndDelete(listOptions)
 	CheckErr(err, "could not delete releases")
 
