@@ -80,6 +80,7 @@ func main() {
 		"dryrun":       C.Dryrun,
 		"debug":        C.Debug,
 		"hash":         getOwnHash(),
+		"delay":        C.Delay,
 		"secret":       "<redacted>",
 	}).Info("running config")
 
