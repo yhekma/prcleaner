@@ -50,7 +50,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	_, _ = fmt.Fprint(w, http.StatusAccepted)
+	w.WriteHeader(http.StatusAccepted)
 	// If for any reason we fall through the select below, we don't want to have an empty selector
 	selector := nomatch
 

@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -62,10 +63,17 @@ func logInit() {
 	log.SetLevel(log.InfoLevel)
 }
 
+func aliveAndReady(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	logInit()
+	log.Debug("initializing router")
+	router := mux.NewRouter()
 	log.Info("process environment")
 	err := envconfig.Process("cleaner", &C)
+	CheckErr(err, "could not process environment")
 	log.Info("processed environment")
 	if C.Debug {
 		log.Info("running in debug mode")
@@ -86,7 +94,13 @@ func main() {
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
-	log.Info("starting server")
-	err = http.ListenAndServe(":8000", handler)
-	CheckErr(err, "could not start listener")
+	readyHandler := http.HandlerFunc(aliveAndReady)
+	router.HandleFunc("/", handler)
+	router.HandleFunc("/ready", readyHandler)
+	router.HandleFunc("/alive", readyHandler)
+	srv := &http.Server{
+		Handler: router,
+		Addr:    ":8000",
+	}
+	log.Fatal(srv.ListenAndServe())
 }
