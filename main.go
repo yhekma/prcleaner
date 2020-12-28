@@ -72,7 +72,6 @@ func aliveAndReady(w http.ResponseWriter, _ *http.Request) {
 
 func main() {
 	logInit()
-	CheckErr(prometheus.Register(ReleasesDeleted), "could not register counter")
 	log.Debug("initializing router")
 	router := mux.NewRouter()
 	log.Info("process environment")
