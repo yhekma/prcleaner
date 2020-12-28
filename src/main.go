@@ -98,7 +98,7 @@ func main() {
 
 	ReleasesDeleted = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "releases_deleted",
-	}, []string{"namespaces"})
+	}, []string{"namespace"})
 	HooksReceived = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "hooks_received",
 	}, []string{"event_type"})
