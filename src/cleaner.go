@@ -94,6 +94,8 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		} else {
 			HooksReceived.With(prometheus.Labels{"event_type": "branchpush"}).Inc()
 		}
+	default:
+		HooksReceived.With(prometheus.Labels{"event_type": "misc"}).Inc()
 	}
 
 	if selector == nomatch {
