@@ -100,7 +100,7 @@ func main() {
 		Name: "releases_deleted",
 	}, []string{"namespaces"})
 	HooksReceived = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "prs_received",
+		Name: "hooks_received",
 	}, []string{"event_type"})
 	CheckErr(prometheus.Register(ReleasesDeleted), "could not register prometheus counter releases_deleted")
 	CheckErr(prometheus.Register(HooksReceived), "could not register prometheus counter hooks_received")
