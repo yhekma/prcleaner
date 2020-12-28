@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
@@ -25,8 +27,9 @@ type Config struct {
 }
 
 var (
-	C         Config
-	Clientset *kubernetes.Clientset
+	C               Config
+	ReleasesDeleted *prometheus.CounterVec
+	Clientset       *kubernetes.Clientset
 )
 
 func getOwnHash() (hash string) {
@@ -69,6 +72,7 @@ func aliveAndReady(w http.ResponseWriter, _ *http.Request) {
 
 func main() {
 	logInit()
+	CheckErr(prometheus.Register(ReleasesDeleted), "could not register counter")
 	log.Debug("initializing router")
 	router := mux.NewRouter()
 	log.Info("process environment")
@@ -92,12 +96,17 @@ func main() {
 		"secret":       "<redacted>",
 	}).Info("running config")
 
+	ReleasesDeleted = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "releases_deleted",
+	}, []string{"namespaces"})
+
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
 	readyHandler := http.HandlerFunc(aliveAndReady)
 	router.HandleFunc("/", handler)
 	router.HandleFunc("/ready", readyHandler)
 	router.HandleFunc("/alive", readyHandler)
+	router.Handle("/metrics", promhttp.Handler())
 	srv := &http.Server{
 		Handler: router,
 		Addr:    ":8000",

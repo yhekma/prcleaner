@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/v32/github"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
@@ -170,6 +171,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 				"repo":               deployment.Labels[C.RepoLabel],
 				"branch":             deployment.Labels[C.BranchLabel],
 			}).Info("release deleted")
+			ReleasesDeleted.With(prometheus.Labels{"namespace": deployment.Namespace}).Inc()
 		}
 		log.WithFields(log.Fields{
 			"stdout": out,
