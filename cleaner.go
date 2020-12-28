@@ -67,6 +67,7 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 			"reponame": *e.Repo.Name,
 			"sha":      *e.PullRequest.Head.SHA,
 		}).Debug("received pr")
+		HooksReceived.With(prometheus.Labels{"event_type": fmt.Sprintf("pr%s", *e.Action)}).Inc()
 
 		if *e.Action == "closed" {
 			log.Debug("closed pr")
@@ -89,6 +90,9 @@ func cleaner(w http.ResponseWriter, r *http.Request) error {
 		}).Debug("received pushevent")
 		if *e.Deleted {
 			selector = fmt.Sprintf("%s=%s,%s=%s,%s=%s", C.BranchLabel, saneBranchName, C.RepoLabel, *e.Repo.Name, C.OwnerLabel, *e.Repo.Owner.Name)
+			HooksReceived.With(prometheus.Labels{"event_type": "branchdeleted"}).Inc()
+		} else {
+			HooksReceived.With(prometheus.Labels{"event_type": "branchpush"}).Inc()
 		}
 	}
 

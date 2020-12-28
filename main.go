@@ -29,6 +29,7 @@ type Config struct {
 var (
 	C               Config
 	ReleasesDeleted *prometheus.CounterVec
+	HooksReceived   *prometheus.CounterVec
 	Clientset       *kubernetes.Clientset
 )
 
@@ -98,7 +99,11 @@ func main() {
 	ReleasesDeleted = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "releases_deleted",
 	}, []string{"namespaces"})
-	CheckErr(prometheus.Register(ReleasesDeleted), "could not register prometheus counter")
+	HooksReceived = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "prs_received",
+	}, []string{"event_type"})
+	CheckErr(prometheus.Register(ReleasesDeleted), "could not register prometheus counter releases_deleted")
+	CheckErr(prometheus.Register(HooksReceived), "could not register prometheus counter hooks_received")
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
