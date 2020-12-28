@@ -99,6 +99,7 @@ func main() {
 	ReleasesDeleted = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "releases_deleted",
 	}, []string{"namespaces"})
+	CheckErr(prometheus.Register(ReleasesDeleted), "could not register prometheus counter")
 
 	Clientset = getKubeCtx()
 	handler := http.HandlerFunc(CleanerServer)
