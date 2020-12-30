@@ -12,6 +12,7 @@ Program uses the following env variables:
 * `CLEANER_SECRET` secret for the webhook to be used
 * `CLEANER_DRYRUN` self-explanatory
 * `CLEANER_DEBUG` self-explanatory
+* `CLEANER_DELAY` rerun the same query to find deployments to be deleted after this many seconds, default `300`
 
 ## Flow
 
