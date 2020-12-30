@@ -153,7 +153,7 @@ func findAndDelete(listOptions metav1.ListOptions) error {
 			"namespace":  deployment.Namespace,
 		}).Debug("found matching deployment")
 
-		log.Infof("deleting release %s in namespace %s (except when in dryrun mode", release, deployment.Namespace)
+		log.Infof("deleting release %s in namespace %s (except when in dryrun mode)", release, deployment.Namespace)
 		// If we match more than 1 release, something is very wrong
 		if len(strings.Split(release, " ")) > 1 {
 			log.WithFields(log.Fields{
