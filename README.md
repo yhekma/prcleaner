@@ -8,7 +8,7 @@ Program uses the following env variables:
 * `CLEANER_RELEASELABEL` label to match releases on, default `helm.sh/release`
 * `CLEANER_BRANCHLABEL` label to match branches on, default `app.fedex.io/git-branch`
 * `CLEANER_OWNERLABEL` label to match owner on, default `app.fedex.io/git-owner`
-* `CLEANER_REPOLABEL` label to match reposutory on, default `app.fedex.io/git-repository`
+* `CLEANER_REPOLABEL` label to match repository on, default `app.fedex.io/git-repository`
 * `CLEANER_SECRET` secret for the webhook to be used
 * `CLEANER_DRYRUN` self-explanatory
 * `CLEANER_DEBUG` self-explanatory
