@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/go-github/v32/github"
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,7 +39,8 @@ func trimString(s string, l int) string {
 
 func cleaner(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
-		_, _ = fmt.Fprintf(w, "400")
+		w.WriteHeader(http.StatusBadRequest)
+		return errors.New("bad request, we do not support POST")
 	}
 	payload, err := github.ValidatePayload(r, []byte(C.Secret))
 	if err != nil {
